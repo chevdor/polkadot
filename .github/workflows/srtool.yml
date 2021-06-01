@@ -27,10 +27,25 @@ jobs:
         with:
             toolchain: stable
             override: true
-      - uses: actions-rs/cargo@v1
+      - name: Install subwasm
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: "--git https://gitlab.com/chevdor/subwasm"
+      - name: Install tera-cli
+        uses: actions-rs/cargo@v1
         with:
           command: install
           args: "--git https://github.com/guangie88/tera-cli"
+      - name: Show WASM information
+        shell: bash
+        run: subwasm info ${{ steps.srtool_build.outputs.json }}
+      - name: Extract the metadata
+        shell: bash
+        run: subwasm meta ${{ steps.srtool_build.outputs.json }}
+      - name: Check the metadata diff
+        shell: bash
+        run: subwasm diff ${{ steps.srtool_build.outputs.json }} --chain-b ${{ matrix.chain }}
       - name: Build report
         shell: bash
         run: |
