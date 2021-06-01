@@ -9,9 +9,6 @@ jobs:
       matrix:
         chain: ["westend"]
     steps:
-      - name: Install utils
-        run: |
-          sudo apt install tera
       - uses: actions/checkout@v2
       - name: Srtool build
         id: srtool_build
@@ -30,5 +27,13 @@ jobs:
         with:
             toolchain: stable
             override: true
-      
+      - uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: "--git https://github.com/guangie88/tera-cli"
+      - name: Build report
+        shell: bash
+        run: |
+          echo ${{ steps.srtool_build.outputs.json }} >> /tmp/data.json
+          tera --json /tmp/data.json --file templates/srtool_report.md >> report.md
 
