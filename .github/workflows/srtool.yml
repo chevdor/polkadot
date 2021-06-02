@@ -21,10 +21,10 @@ jobs:
           echo "- version: ${{ steps.srtool_build.outputs.version }}"
           echo "- info: ${{ steps.srtool_build.outputs.info }}"
           echo "- prop: ${{ steps.srtool_build.outputs.proposal_hash }}"
-      - name: Digest # this step is split from the previous for now to debug
+      - name: Digest
         run: |
-          echo '${{ steps.srtool_build.outputs.json }}' | jq
           echo '${{ steps.srtool_build.outputs.json }}' | jq > ${{ matrix.chain }}-runtime-digest.json
+          cat ${{ matrix.chain }}-runtime-digest.json
       - name: Install latest stable
         uses: actions-rs/toolchain@v1
         with:
@@ -40,7 +40,7 @@ jobs:
         with:
           command: install
           args: "--git https://github.com/guangie88/tera-cli"
-      - name: Show WASM information
+      - name: Show Runtime information
         shell: bash
         run: |
           subwasm info ${{ steps.srtool_build.outputs.wasm }}
@@ -53,22 +53,20 @@ jobs:
       - name: Check the metadata diff
         shell: bash
         run: |
-          subwasm diff ${{ steps.srtool_build.outputs.wasm }} --chain-b ${{ matrix.chain }}
           subwasm diff ${{ steps.srtool_build.outputs.wasm }} --chain-b ${{ matrix.chain }} > ${{ matrix.chain }}-diff.txt
+          cat ${{ matrix.chain }}-diff.txt
       - name: Build report
         shell: bash
         run: |
-          echo '${{ steps.srtool_build.outputs.json }}' >> /tmp/data.json
-          tera --json /tmp/data.json --file templates/srtool_report.md >> ${{ matrix.chain }}-runtime-report.md
+          tera --json ${{ matrix.chain }}-runtime-digest.json --file templates/srtool_report.md >> ${{ matrix.chain }}-runtime-report.md
       - name: Store artifacts
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.chain }}-runtime-{{ github.ref }}
           path: |
-            ${{ matrix.chain }}-runtime-report.md
-            ${{ matrix.chain }}-runtime-digest.json
             ${{ steps.srtool_build.outputs.wasm }}
+            ${{ matrix.chain }}-runtime-digest.json
+            ${{ matrix.chain }}-runtime-report.md
             ${{ matrix.chain }}-metadata.json
             ${{ matrix.chain }}-info.json
             ${{ matrix.chain }}-diff.txt
-            
