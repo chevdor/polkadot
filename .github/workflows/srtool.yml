@@ -25,21 +25,40 @@ jobs:
         run: |
           echo '${{ steps.srtool_build.outputs.json }}' | jq > ${{ matrix.chain }}-runtime-digest.json
           cat ${{ matrix.chain }}-runtime-digest.json
+
+  install_cargo:
+    runs-on: ubuntu-latest
+    steps:
       - name: Install latest stable
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: stable
-            override: true
+          toolchain: stable
+          override: true
+
+  install_subwasm:
+    runs-on: ubuntu-latest
+    needs: install_cargo
+    steps:
       - name: Install subwasm
         uses: actions-rs/cargo@v1
         with:
           command: install
           args: "--git https://gitlab.com/chevdor/subwasm"
+
+  install_tera:
+    runs-on: ubuntu-latest
+    needs: install_cargo
+    steps:
       - name: Install tera-cli
         uses: actions-rs/cargo@v1
         with:
           command: install
           args: "--git https://github.com/guangie88/tera-cli"
+
+  subwasm:
+    runs-on: ubuntu-latest
+    needs: install_subwasm
+    steps:
       - name: Show Runtime information
         shell: bash
         run: |
@@ -55,10 +74,20 @@ jobs:
         run: |
           subwasm diff ${{ steps.srtool_build.outputs.wasm }} --chain-b ${{ matrix.chain }} > ${{ matrix.chain }}-diff.txt
           cat ${{ matrix.chain }}-diff.txt
+
+  reports:
+    runs-on: ubuntu-latest
+    needs: ["install_tera", "srtool"]
+    steps:
       - name: Build report
         shell: bash
         run: |
           tera --json ${{ matrix.chain }}-runtime-digest.json --file templates/srtool_report.md >> ${{ matrix.chain }}-runtime-report.md
+
+  artifacts:
+    runs-on: ubuntu-latest
+    needs: ["srtool", "subwasm", "reports"]
+    steps:
       - name: Store artifacts
         uses: actions/upload-artifact@v2
         with:
