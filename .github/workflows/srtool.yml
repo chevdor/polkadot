@@ -21,7 +21,7 @@ jobs:
           echo - version: ${{ steps.srtool_build.outputs.version }}
           echo - info: ${{ steps.srtool_build.outputs.info }}
           echo - prop: ${{ steps.srtool_build.outputs.proposal_hash }}
-          echo ${{ steps.srtool_build.outputs.json }} | jq
+          echo '${{ steps.srtool_build.outputs.json }}' | jq
       - name: Install latest stable
         uses: actions-rs/toolchain@v1
         with:
@@ -39,16 +39,16 @@ jobs:
           args: "--git https://github.com/guangie88/tera-cli"
       - name: Show WASM information
         shell: bash
-        run: subwasm info ${{ steps.srtool_build.outputs.json }}
+        run: subwasm info ${{ steps.srtool_build.outputs.wasm }}
       - name: Extract the metadata
         shell: bash
-        run: subwasm meta ${{ steps.srtool_build.outputs.json }}
+        run: subwasm meta ${{ steps.srtool_build.outputs.wasm }}
       - name: Check the metadata diff
         shell: bash
-        run: subwasm diff ${{ steps.srtool_build.outputs.json }} --chain-b ${{ matrix.chain }}
+        run: subwasm diff ${{ steps.srtool_build.outputs.wasm }} --chain-b ${{ matrix.chain }}
       - name: Build report
         shell: bash
         run: |
-          echo ${{ steps.srtool_build.outputs.json }} >> /tmp/data.json
+          echo '${{ steps.srtool_build.outputs.json }}' >> /tmp/data.json
           tera --json /tmp/data.json --file templates/srtool_report.md >> report.md
 
