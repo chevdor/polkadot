@@ -42,23 +42,33 @@ jobs:
           args: "--git https://github.com/guangie88/tera-cli"
       - name: Show WASM information
         shell: bash
-        run: subwasm info ${{ steps.srtool_build.outputs.wasm }}
+        run: |
+          subwasm info ${{ steps.srtool_build.outputs.wasm }}
+          subwasm --json info ${{ steps.srtool_build.outputs.wasm }} > ${{ matrix.chain }}-info.json
       - name: Extract the metadata
         shell: bash
-        run: subwasm meta ${{ steps.srtool_build.outputs.wasm }}
+        run: |
+          subwasm meta ${{ steps.srtool_build.outputs.wasm }}
+          subwasm --json meta ${{ steps.srtool_build.outputs.wasm }} > ${{ matrix.chain }}-metadata.json
       - name: Check the metadata diff
         shell: bash
-        run: subwasm diff ${{ steps.srtool_build.outputs.wasm }} --chain-b ${{ matrix.chain }}
+        run: |
+          subwasm diff ${{ steps.srtool_build.outputs.wasm }} --chain-b ${{ matrix.chain }}
+          subwasm diff ${{ steps.srtool_build.outputs.wasm }} --chain-b ${{ matrix.chain }} > ${{ matrix.chain }}-diff.txt
       - name: Build report
         shell: bash
         run: |
           echo '${{ steps.srtool_build.outputs.json }}' >> /tmp/data.json
-          tera --json /tmp/data.json --file templates/srtool_report.md >> report.md
+          tera --json /tmp/data.json --file templates/srtool_report.md >> ${{ matrix.chain }}-runtime-report.md
       - name: Store artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.chain }}-runtime
+          name: ${{ matrix.chain }}-runtime-{{ github.ref }}
           path: |
-            report.md
+            ${{ matrix.chain }}-runtime-report.md
             ${{ matrix.chain }}-runtime-digest.json
-            "${{ steps.srtool_build.outputs.wasm }}"
+            ${{ steps.srtool_build.outputs.wasm }}
+            ${{ matrix.chain }}-metadata.json
+            ${{ matrix.chain }}-info.json
+            ${{ matrix.chain }}-diff.txt
+            
