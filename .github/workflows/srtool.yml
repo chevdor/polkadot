@@ -18,9 +18,11 @@ jobs:
       - name: Summary
         run: |
           echo Summary:
-          echo - version: ${{ steps.srtool_build.outputs.version }}
-          echo - info: ${{ steps.srtool_build.outputs.info }}
-          echo - prop: ${{ steps.srtool_build.outputs.proposal_hash }}
+          echo "- version: ${{ steps.srtool_build.outputs.version }}"
+          echo "- info: ${{ steps.srtool_build.outputs.info }}"
+          echo "- prop: ${{ steps.srtool_build.outputs.proposal_hash }}"
+      - name: Summary JSON # this step is split from the previous for now to debug
+        run: |
           echo '${{ steps.srtool_build.outputs.json }}' | jq
       - name: Install latest stable
         uses: actions-rs/toolchain@v1
