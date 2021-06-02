@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: ["install_tera", "srtool"]
     steps:
-      - name: Build report
+      - name: Build report for ${{ matrix.chain }}
         shell: bash
         run: |
           tera --json ${{ matrix.chain }}-runtime-digest.json --file templates/srtool_report.md >> ${{ matrix.chain }}-runtime-report.md
@@ -88,10 +88,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: ["srtool", "subwasm", "reports"]
     steps:
-      - name: Store artifacts
+      - name: Store artifacts for ${{ matrix.chain }}
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.chain }}-runtime-{{ github.ref }}
+          name: ${{ matrix.chain }}-runtime-${{ github.ref }}
           path: |
             ${{ steps.srtool_build.outputs.wasm }}
             ${{ matrix.chain }}-runtime-digest.json
