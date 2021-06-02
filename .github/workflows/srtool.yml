@@ -21,9 +21,10 @@ jobs:
           echo "- version: ${{ steps.srtool_build.outputs.version }}"
           echo "- info: ${{ steps.srtool_build.outputs.info }}"
           echo "- prop: ${{ steps.srtool_build.outputs.proposal_hash }}"
-      - name: Summary JSON # this step is split from the previous for now to debug
+      - name: Digest # this step is split from the previous for now to debug
         run: |
           echo '${{ steps.srtool_build.outputs.json }}' | jq
+          echo '${{ steps.srtool_build.outputs.json }}' | jq > ${{ matrix.chain }}-runtime-digest.json
       - name: Install latest stable
         uses: actions-rs/toolchain@v1
         with:
@@ -53,4 +54,11 @@ jobs:
         run: |
           echo '${{ steps.srtool_build.outputs.json }}' >> /tmp/data.json
           tera --json /tmp/data.json --file templates/srtool_report.md >> report.md
-
+      - name: Store artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.chain }}-runtime
+          path: |
+            report.md
+            ${{ matrix.chain }}-runtime-digest.json
+            "${{ steps.srtool_build.outputs.wasm }}"
